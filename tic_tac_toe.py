@@ -18,25 +18,23 @@ class TicTacToeTile(QPushButton):
         self.reset()
 
     def am_clicked(self, current_choice):
-        if not self.is_chosen:
-            self.is_chosen = True
+        if not self.is_locked:
+            self.is_locked = True
             self.choice = current_choice
             self.setIcon(QIcon(pics_by_choice[current_choice]))
-            winner = self.board.check_for_win()
-            if winner > -1:
-                self.board.lock_all_tiles()
+            self.board.check_for_win()
             return True
         else:
             return False
 
     def reset(self):
-        self.is_chosen = False
+        self.is_locked = False
         self.choice = -1  # -1 for no choice
         self.setIcon(QIcon("Question_Mark.jpg"))
         self.setIconSize(QSize(180,180))
 
     def lock(self):
-        self.is_chosen = True
+        self.is_locked = True
 
     def get_choice(self):
         return self.choice
@@ -79,7 +77,7 @@ class TicTacToeBoard(QWidget):
     def clicked_tile(self):
         if self.sender().am_clicked(self.current_choice):
             self.current_choice = (self.current_choice + 1) % 2
-            if self.winner < 0:
+            if self.winner < 0:  # Game continues
                 self.update_prompt()
 
     def reset(self):
@@ -111,26 +109,21 @@ class TicTacToeBoard(QWidget):
                 [picks[0][2], picks[1][1], picks[2][0]] == [w]*3:
                 self.prompt_label.setText(names_by_choice[w] + ' wins!')
                 self.winner = w
-                return w
+                self.lock_all_tiles()
+                return
 
         ''' Check for a tied game! '''
         for i_row in range(3):
             for i_col in range(3):
                 if picks[i_row][i_col] < 0:
-                    print(picks)
-                    return -1  # game continues
-
-        print('Made it to here!!!!')
+                    return  # game continues
         self.prompt_label.setText('Tied game!')
-        self.winner = 2
-        return 2  # tied game!
+        self.winner = 2  # Code for tied game
 
     def lock_all_tiles(self):
         for tile in self.tiles:
             tile.lock()
         
-
-
 # Create a QT application
 app = QApplication(sys.argv)
 tic_tac_toe = TicTacToeBoard()
